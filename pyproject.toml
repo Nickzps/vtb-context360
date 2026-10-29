@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "context360"
+version = "0.1.0"
+description = "ВТБ Контекст 360: прототип кросс-канального антифрод-движка «Светофор» для СБП, ДБО и банкоматов"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+notebook = ["matplotlib>=3.7"]
+
+[project.scripts]
+context360 = "context360.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
