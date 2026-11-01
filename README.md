@@ -5,7 +5,9 @@
 Решение кейса ВТБ, 1 тур Changellenge >> Cup Moscow 2026.
 
 [![tests](../../actions/workflows/tests.yml/badge.svg)](../../actions/workflows/tests.yml)
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/<ваш-логин>/vtb-context360/blob/main/notebooks/colab_demo.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Nickzps/vtb-context360/blob/main/notebooks/colab_demo.ipynb)
+
+**▶ [Онлайн-демо](https://nickzps.github.io/vtb-context360/)**: движок работает прямо в браузере. Можно проверить свой перевод и запустить симуляцию с другими порогами.
 
 ## Проблема
 
@@ -50,7 +52,7 @@
 Нужен Python 3.10+, сторонние библиотеки для движка не требуются.
 
 ```bash
-git clone https://github.com/<ваш-логин>/vtb-context360.git
+git clone https://github.com/Nickzps/vtb-context360.git
 cd vtb-context360
 python run.py                      # полный отчёт
 python run.py --transfers 50000    # быстрее
@@ -100,6 +102,7 @@ vtb-context360/
 │   └── cli.py          # командная строка
 ├── tests/              # сценарии кейса как тесты (Никита, бабушка, флаг АТМ)
 ├── notebooks/          # демо для Google Colab
+├── web/                # онлайн-демо на GitHub Pages (Python в браузере через Pyodide)
 ├── docs/
 │   ├── architecture.md # схема блоков и логика скоринга
 │   └── sbp_research.md # разбор СБП: статистика, топ-10 схем и уязвимостей, FedNow / Zelle / Swish / SEPA Inst / BLIK
