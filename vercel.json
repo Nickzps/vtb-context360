@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "",
+  "buildCommand": "rm -rf _site && mkdir _site && cp web/index.html web/demo.py _site/ && cp -r src/context360 _site/context360",
+  "outputDirectory": "_site"
+}

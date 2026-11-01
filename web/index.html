@@ -3,168 +3,411 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ВТБ Контекст 360</title>
+<title>Контекст 360 — антифрод «Светофор»</title>
 <meta name="description" content="Прототип кросс-канального антифрод-движка «Светофор» для СБП, ДБО и банкоматов. Движок на Python работает прямо в браузере.">
+<meta property="og:title" content="Контекст 360 — антифрод «Светофор»">
+<meta property="og:description" content="−79% потерь клиентов и −73% ложных блокировок на симуляции. Проверьте свой перевод прямо в браузере.">
+<meta name="theme-color" content="#0b1026">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b1026'/%3E%3Ccircle cx='16' cy='8' r='4' fill='%23ff5d6c'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23ffc23d'/%3E%3Ccircle cx='16' cy='24' r='4' fill='%2334d399'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #f6f7f9; --surface: #ffffff; --text: #14171f; --muted: #5d6475; --border: #dfe3ea;
-  --accent: #0a3ca8; --accent-text: #ffffff;
-  --green: #138a4b; --green-bg: #e3f5ea; --yellow: #9a6a00; --yellow-bg: #fff3d1;
-  --red: #c0262d; --red-bg: #fde4e4;
+  --bg: #f4f6fb; --surface: #ffffff; --surface-2: #eef1f8; --text: #0e1330; --muted: #5b6382;
+  --border: #e1e5f0; --accent: #4c5cff; --accent-2: #00c2b8; --accent-text: #ffffff;
+  --green: #0f9f6e; --green-bg: #e2f7ee; --yellow: #b57900; --yellow-bg: #fff4d6;
+  --red: #e0324a; --red-bg: #ffe5e9;
+  --shadow: 0 1px 2px rgba(14,19,48,.04), 0 8px 24px rgba(14,19,48,.06);
+  --hero-bg: #0b1026; --hero-text: #f3f5ff; --hero-muted: #a3abd0;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0f1218; --surface: #181c24; --text: #e8eaf0; --muted: #9aa2b4; --border: #2b313d;
-    --accent: #6c9bff; --accent-text: #0b1020;
-    --green: #4fd18a; --green-bg: #133222; --yellow: #f2c14e; --yellow-bg: #3a2e0f;
-    --red: #ff7b7f; --red-bg: #3d1719;
+    --bg: #080b1a; --surface: #11162e; --surface-2: #181f3d; --text: #eef0fb; --muted: #9aa3c7;
+    --border: #232a4a; --accent: #7b87ff; --accent-2: #2ee6da; --accent-text: #0b1026;
+    --green: #34d399; --green-bg: #0e2b25; --yellow: #ffc23d; --yellow-bg: #2f2610;
+    --red: #ff6b7d; --red-bg: #33141c;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+    --hero-bg: #050817;
   }
 }
 * { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 body {
   margin: 0; background: var(--bg); color: var(--text);
-  font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font: 16px/1.55 Manrope, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
-main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; }
-header h1 { font-size: 32px; line-height: 1.2; margin: 0 0 8px; }
-header p { color: var(--muted); margin: 0 0 12px; max-width: 720px; }
-header nav a { margin-right: 16px; }
 a { color: var(--accent); }
-section {
-  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-  padding: 24px; margin-top: 24px;
-}
-h2 { font-size: 22px; margin: 0 0 4px; }
-.lead { color: var(--muted); margin: 0 0 20px; }
-.status { font-size: 14px; color: var(--muted); margin-top: 16px; }
-.presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
-button {
-  font: inherit; cursor: pointer; border-radius: 8px; padding: 8px 14px;
-  border: 1px solid var(--border); background: var(--surface); color: var(--text);
-}
-button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
-button:disabled { opacity: .5; cursor: wait; }
-.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
-legend { font-weight: 600; margin-bottom: 8px; padding: 0; }
-label { display: block; font-size: 14px; margin-bottom: 10px; color: var(--muted); }
-label.check { display: flex; align-items: center; gap: 8px; color: var(--text); }
-input[type=number], select {
-  display: block; width: 100%; margin-top: 4px; font: inherit; color: var(--text);
-  background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px;
-}
-input[type=range] { width: 100%; }
-.actions { margin-top: 12px; }
-.result { margin-top: 20px; border-radius: 10px; padding: 16px 20px; border: 1px solid var(--border); }
-.result[data-c=GREEN] { background: var(--green-bg); border-color: var(--green); }
-.result[data-c=YELLOW] { background: var(--yellow-bg); border-color: var(--yellow); }
-.result[data-c=RED] { background: var(--red-bg); border-color: var(--red); }
-.badge { font-weight: 700; font-size: 20px; }
-.result[data-c=GREEN] .badge { color: var(--green); }
-.result[data-c=YELLOW] .badge { color: var(--yellow); }
-.result[data-c=RED] .badge { color: var(--red); }
-.result ul { margin: 8px 0; padding-left: 20px; }
-.compare { font-size: 14px; color: var(--muted); }
-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-th, td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+
+/* ---------- верхняя панель ---------- */
+.topbar { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--hero-bg) 85%, transparent);
+  backdrop-filter: saturate(160%) blur(12px); -webkit-backdrop-filter: saturate(160%) blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,.06); }
+.topbar .wrap { display: flex; align-items: center; justify-content: space-between; height: 60px; }
+.logo { display: flex; align-items: center; gap: 10px; color: var(--hero-text); text-decoration: none; font-weight: 800; letter-spacing: -.01em; }
+.lights { display: inline-flex; flex-direction: column; gap: 2px; padding: 4px; border-radius: 7px; background: rgba(255,255,255,.08); }
+.lights i { width: 6px; height: 6px; border-radius: 50%; display: block; }
+.lights i:nth-child(1) { background: #ff5d6c; } .lights i:nth-child(2) { background: #ffc23d; } .lights i:nth-child(3) { background: #34d399; }
+.topbar nav { display: flex; gap: 22px; }
+.topbar nav a { color: var(--hero-muted); text-decoration: none; font-size: 14px; font-weight: 600; }
+.topbar nav a:hover { color: var(--hero-text); }
+
+/* ---------- первый экран ---------- */
+.hero { position: relative; overflow: hidden; background: var(--hero-bg); color: var(--hero-text); padding: 72px 0 88px; }
+.hero::before { content: ""; position: absolute; inset: -40% -10% auto auto; width: 720px; height: 720px;
+  background: radial-gradient(closest-side, rgba(76,92,255,.45), transparent 70%); pointer-events: none; }
+.hero::after { content: ""; position: absolute; inset: auto auto -50% -15%; width: 640px; height: 640px;
+  background: radial-gradient(closest-side, rgba(0,194,184,.25), transparent 70%); pointer-events: none; }
+.hero .wrap { position: relative; z-index: 1; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px;
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); font-size: 13px; color: var(--hero-muted); }
+.pill b { color: var(--hero-text); font-weight: 600; }
+.hero h1 { font-size: clamp(36px, 6vw, 64px); line-height: 1.04; letter-spacing: -.035em; margin: 22px 0 18px; font-weight: 800; max-width: 820px; }
+.hero h1 span { background: linear-gradient(90deg, #8c97ff, #2ee6da); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero p.sub { font-size: 19px; color: var(--hero-muted); max-width: 640px; margin: 0 0 32px; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer;
+  border-radius: 12px; padding: 13px 22px; border: 1px solid transparent; text-decoration: none; transition: transform .15s, box-shadow .15s, background .15s; }
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: linear-gradient(135deg, #5b6bff, #3f4ff0); color: #fff; box-shadow: 0 8px 24px rgba(76,92,255,.35); }
+.btn-primary:hover { box-shadow: 0 10px 30px rgba(76,92,255,.5); }
+.btn-ghost { background: rgba(255,255,255,.06); color: var(--hero-text); border-color: rgba(255,255,255,.16); }
+.btn-ghost:hover { background: rgba(255,255,255,.12); }
+.btn:disabled { opacity: .55; cursor: progress; box-shadow: none; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-top: 56px; border-radius: 16px; overflow: hidden;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.08); }
+.stat { background: rgba(11,16,38,.6); padding: 22px 22px 20px; }
+.stat b { display: block; font-size: 34px; letter-spacing: -.03em; font-weight: 800; }
+.stat b.g { color: #34d399; } .stat b.c { color: #2ee6da; } .stat b.v { color: #9aa4ff; }
+.stat span { font-size: 14px; color: var(--hero-muted); }
+.boot { margin-top: 18px; font-size: 13px; color: var(--hero-muted); display: flex; align-items: center; gap: 10px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #ffc23d; box-shadow: 0 0 0 4px rgba(255,194,61,.15); animation: pulse 1.2s infinite; }
+.dot.ok { background: #34d399; box-shadow: 0 0 0 4px rgba(52,211,153,.15); animation: none; }
+.dot.err { background: #ff5d6c; animation: none; }
+@keyframes pulse { 50% { opacity: .35; } }
+
+/* ---------- секции ---------- */
+section.block { padding: 88px 0 0; }
+.eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 0 0 10px; }
+h2 { font-size: clamp(28px, 4vw, 40px); line-height: 1.12; letter-spacing: -.025em; margin: 0 0 12px; font-weight: 800; }
+.lead { color: var(--muted); font-size: 17px; max-width: 680px; margin: 0 0 36px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow); }
+
+/* проблема */
+.problem { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.problem .card { padding: 28px; }
+.problem h3 { margin: 12px 0 8px; font-size: 20px; letter-spacing: -.01em; }
+.problem p { margin: 0; color: var(--muted); }
+.emoji { font-size: 30px; line-height: 1; }
+
+/* коридоры */
+.corridors { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.corr { padding: 28px; position: relative; overflow: hidden; }
+.corr::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px; background: var(--c); }
+.corr .tag { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; letter-spacing: .04em; color: var(--c); }
+.corr .tag i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 5px var(--cb); }
+.corr h3 { margin: 14px 0 8px; font-size: 20px; letter-spacing: -.01em; }
+.corr p { margin: 0 0 16px; color: var(--muted); font-size: 15px; }
+.corr .share { font-size: 13px; font-weight: 700; color: var(--muted); padding-top: 14px; border-top: 1px dashed var(--border); }
+.corr .share b { color: var(--text); font-size: 18px; margin-right: 4px; }
+
+/* проверка перевода */
+.presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.preset { text-align: left; font: inherit; cursor: pointer; padding: 16px; border-radius: 16px; background: var(--surface);
+  border: 1.5px solid var(--border); color: var(--text); transition: border-color .15s, transform .15s, box-shadow .15s; }
+.preset:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
+.preset[aria-pressed=true] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.preset .emoji { font-size: 24px; display: block; margin-bottom: 8px; }
+.preset b { display: block; font-size: 15px; }
+.preset span { font-size: 13px; color: var(--muted); }
+.playground { display: grid; grid-template-columns: 1.25fr 1fr; gap: 20px; align-items: start; }
+.form { padding: 24px; }
+.form details + details { border-top: 1px solid var(--border); }
+.form summary { cursor: pointer; list-style: none; font-weight: 700; padding: 14px 0; display: flex; justify-content: space-between; align-items: center; }
+.form summary::-webkit-details-marker { display: none; }
+.form summary::after { content: "＋"; color: var(--muted); font-weight: 400; }
+.form details[open] summary::after { content: "−"; }
+.form details:first-child summary { padding-top: 0; }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; padding-bottom: 18px; }
+.field { display: block; font-size: 13px; font-weight: 600; color: var(--muted); }
+.field input { display: block; width: 100%; margin-top: 6px; font: inherit; font-size: 15px; font-weight: 600; color: var(--text);
+  background: var(--surface-2); border: 1.5px solid transparent; border-radius: 10px; padding: 10px 12px; transition: border-color .15s; }
+.field input:focus { outline: none; border-color: var(--accent); }
+.toggle { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; cursor: pointer; padding: 6px 0; }
+.toggle input { appearance: none; -webkit-appearance: none; flex: none; width: 38px; height: 22px; border-radius: 999px; background: var(--border);
+  position: relative; cursor: pointer; transition: background .15s; margin: 0; }
+.toggle input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.toggle input:checked { background: var(--accent); }
+.toggle input:checked::after { transform: translateX(16px); }
+.form .submit { margin-top: 6px; width: 100%; justify-content: center; }
+
+.verdict { padding: 28px; position: sticky; top: 84px; min-height: 320px; }
+.verdict .empty { color: var(--muted); }
+.signal { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+.signal .lamp { display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 14px; background: #0b1026; }
+.signal .lamp i { width: 18px; height: 18px; border-radius: 50%; background: #262c4d; transition: background .25s, box-shadow .25s; }
+.signal[data-c=RED] .lamp i:nth-child(1) { background: #ff5d6c; box-shadow: 0 0 16px #ff5d6c; }
+.signal[data-c=YELLOW] .lamp i:nth-child(2) { background: #ffc23d; box-shadow: 0 0 16px #ffc23d; }
+.signal[data-c=GREEN] .lamp i:nth-child(3) { background: #34d399; box-shadow: 0 0 16px #34d399; }
+.signal h3 { margin: 0; font-size: 24px; letter-spacing: -.02em; }
+.signal .score { font-size: 14px; color: var(--muted); font-weight: 600; }
+.meter { height: 8px; border-radius: 999px; background: linear-gradient(90deg, var(--green) 0 35%, var(--yellow) 35% 70%, var(--red) 70%); position: relative; margin: 6px 0 22px; opacity: .9; }
+.meter i { position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 50%; background: var(--surface); border: 3px solid var(--text);
+  transform: translate(-50%, -50%); transition: left .4s cubic-bezier(.2,.8,.2,1); }
+.reasons { list-style: none; padding: 0; margin: 0 0 18px; display: grid; gap: 8px; }
+.reasons li { padding: 10px 12px; border-radius: 10px; background: var(--surface-2); font-size: 14px; font-weight: 600; }
+.outcome { padding: 14px 16px; border-radius: 12px; font-weight: 600; font-size: 15px; }
+.outcome[data-ok=true] { background: var(--green-bg); color: var(--green); }
+.outcome[data-ok=false] { background: var(--red-bg); color: var(--red); }
+.outcome small { display: block; font-weight: 500; color: var(--text); opacity: .8; margin-top: 2px; }
+.legacy { margin-top: 14px; font-size: 14px; color: var(--muted); padding-left: 12px; border-left: 3px solid var(--border); }
+
+/* симуляция */
+.sim { padding: 28px; }
+.controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; align-items: end; }
+.range { font-size: 13px; font-weight: 600; color: var(--muted); }
+.range output { float: right; color: var(--text); font-weight: 800; }
+.range input { width: 100%; margin-top: 10px; accent-color: var(--accent); }
+.seg { display: flex; background: var(--surface-2); border-radius: 10px; padding: 3px; margin-top: 8px; }
+.seg label { flex: 1; text-align: center; font-size: 13px; font-weight: 700; padding: 7px 0; border-radius: 8px; cursor: pointer; color: var(--muted); }
+.seg input { display: none; }
+.seg input:checked + span { color: var(--text); }
+.seg label:has(input:checked) { background: var(--surface); box-shadow: var(--shadow); }
+.sim .run { margin-top: 24px; }
+.results { margin-top: 28px; display: none; }
+.results.show { display: block; animation: rise .35s ease-out; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+.kpi { background: var(--surface-2); border-radius: 14px; padding: 18px; }
+.kpi b { display: block; font-size: 30px; font-weight: 800; letter-spacing: -.03em; }
+.kpi b.good { color: var(--green); }
+.kpi span { font-size: 13px; color: var(--muted); font-weight: 600; }
+.charts { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.chart h4 { margin: 0 0 14px; font-size: 15px; }
+.cmp { display: grid; grid-template-columns: 120px 1fr; gap: 8px 12px; align-items: center; font-size: 13px; font-weight: 600; margin-bottom: 18px; }
+.cmp .label { color: var(--muted); }
+.cmp .track { position: relative; height: 26px; background: var(--surface-2); border-radius: 8px; overflow: hidden; }
+.cmp .fill { height: 100%; border-radius: 8px; display: flex; align-items: center; justify-content: flex-end; padding: 0 8px; color: #fff; font-weight: 700;
+  white-space: nowrap; transition: width .6s cubic-bezier(.2,.8,.2,1); min-width: fit-content; }
+.cmp .old { background: #8b93b3; } .cmp .new { background: linear-gradient(90deg, #5b6bff, #00c2b8); }
+.cmp-title { font-size: 13px; font-weight: 700; margin: 0 0 8px; }
+.bar { display: flex; height: 36px; border-radius: 10px; overflow: hidden; margin: 0 0 10px; }
+.bar div { display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #fff; transition: width .6s; white-space: nowrap; overflow: hidden; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 22px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 10px 8px; border-bottom: 1px solid var(--border); }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 700; }
 th:first-child, td:first-child { text-align: left; }
-td.win { font-weight: 700; }
-.bar { display: flex; height: 28px; border-radius: 6px; overflow: hidden; margin: 8px 0 4px; }
-.bar div { display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #fff; min-width: 0; white-space: nowrap; }
-.legend { font-size: 14px; color: var(--muted); }
-.sliders { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 24px; }
-.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
-.kpi { background: var(--bg); border-radius: 8px; padding: 12px 14px; }
-.kpi b { display: block; font-size: 24px; }
-.kpi span { font-size: 13px; color: var(--muted); }
-.note { font-size: 13px; color: var(--muted); margin-top: 16px; }
+td.win { color: var(--green); font-weight: 800; }
 .table-wrap { overflow-x: auto; }
-@media (max-width: 760px) {
-  .grid, .sliders, .kpis { grid-template-columns: 1fr; }
-  header h1 { font-size: 26px; }
-  section { padding: 18px; }
+.note { font-size: 13px; color: var(--muted); margin-top: 24px; padding: 14px 16px; background: var(--surface-2); border-radius: 12px; }
+
+/* подвал */
+footer { margin-top: 96px; padding: 40px 0 56px; border-top: 1px solid var(--border); color: var(--muted); font-size: 14px; }
+footer .wrap { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+footer p { margin: 0 0 6px; max-width: 620px; }
+footer nav { display: flex; gap: 18px; flex-wrap: wrap; }
+
+@media (max-width: 900px) {
+  .stats, .kpis { grid-template-columns: repeat(2, 1fr); }
+  .presets { grid-template-columns: repeat(2, 1fr); }
+  .playground, .charts, .problem { grid-template-columns: 1fr; }
+  .corridors { grid-template-columns: 1fr; }
+  .controls { grid-template-columns: 1fr 1fr; }
+  .verdict { position: static; min-height: 0; }
 }
+@media (max-width: 560px) {
+  .topbar nav { display: none; }
+  .hero { padding: 48px 0 56px; }
+  .hero p.sub { font-size: 17px; }
+  .stat { padding: 16px; } .stat b { font-size: 26px; }
+  .fields, .controls { grid-template-columns: 1fr; }
+  .sim, .form, .verdict, .corr, .problem .card { padding: 20px; }
+  .kpi b { font-size: 24px; }
+  .cmp { grid-template-columns: 1fr; gap: 4px; }
+  section.block { padding-top: 64px; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } html { scroll-behavior: auto; } }
 </style>
 </head>
 <body>
-<main>
-  <header>
-    <h1>ВТБ Контекст 360</h1>
-    <p>Прототип кросс-канального антифрод-движка «Светофор» для цепочки СБП → ДБО → банкомат. Код движка на Python работает прямо в этой вкладке, сервер не нужен.</p>
+<header class="topbar">
+  <div class="wrap">
+    <a class="logo" href="#top"><span class="lights"><i></i><i></i><i></i></span>Контекст 360</a>
     <nav>
-      <a href="https://github.com/Nickzps/vtb-context360">Код на GitHub</a>
+      <a href="#how">Как работает</a>
+      <a href="#try">Проверить перевод</a>
+      <a href="#sim">Симуляция</a>
+      <a href="https://github.com/Nickzps/vtb-context360">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero" id="top">
+  <div class="wrap">
+    <span class="pill">Кейс ВТБ · <b>Changellenge Cup Moscow 2026</b></span>
+    <h1>Антифрод, который видит <span>всю цепочку</span>: СБП → ДБО → банкомат</h1>
+    <p class="sub">Риск-движок «Светофор» пропускает честных клиентов без звонков в колл-центр, а жертву мошенников останавливает везде, включая банкомат.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="#try">Проверить свой перевод →</a>
+      <a class="btn btn-ghost" href="#sim">Запустить симуляцию</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><b class="g">−79%</b><span>потерь клиентов от мошенников</span></div>
+      <div class="stat"><b class="c">−73%</b><span>ложных блокировок с ручным разбором</span></div>
+      <div class="stat"><b class="v">90,6%</b><span>фрода выявлено (было 84,2%)</span></div>
+      <div class="stat"><b>34 594</b><span>честных клиентов прошли проверку сами</span></div>
+    </div>
+    <div class="boot"><span class="dot" id="dot"></span><span id="status">Загружаю движок на Python в браузер…</span></div>
+  </div>
+</div>
+
+<main class="wrap">
+  <section class="block">
+    <p class="eyebrow">Проблема</p>
+    <h2>Жёсткие правила ошибаются в обе стороны</h2>
+    <p class="lead">75% украденных у физлиц денег уходит через СБП и счета ДБО: 4,91 из 6,52 млрд ₽ во II квартале 2026 года по данным Банка России.</p>
+    <div class="problem">
+      <div class="card">
+        <span class="emoji">🚲</span>
+        <h3>Честного клиента блокируют</h3>
+        <p>Никита сменил номер и покупает велосипед с рук. Перевод блокируется, нужно звонить в колл-центр, сделка срывается.</p>
+      </div>
+      <div class="card">
+        <span class="emoji">👵</span>
+        <h3>Жертву мошенника не спасают</h3>
+        <p>Бабушка под диктовку «спецслужб» сама подтверждает перевод кодом из SMS. После блока онлайн её ведут к банкомату, и там она теряет всё.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="how">
+    <p class="eyebrow">Решение</p>
+    <h2>Три коридора вместо «блок или пропуск»</h2>
+    <p class="lead">Каждый перевод получает score из признаков ЦБ, поведения в сессии и сетевых признаков дропа. От score зависит коридор.</p>
+    <div class="corridors">
+      <div class="card corr" style="--c: var(--green); --cb: var(--green-bg)">
+        <span class="tag"><i></i>GREEN</span>
+        <h3>Бесшовно</h3>
+        <p>Перевод в профиле клиента, получатель знаком. Клиент проверку не замечает.</p>
+        <div class="share"><b>85,6%</b> переводов · 0% участия сотрудников</div>
+      </div>
+      <div class="card corr" style="--c: var(--yellow); --cb: var(--yellow-bg)">
+        <span class="tag"><i></i>YELLOW</span>
+        <h3>Клиент снимает подозрение сам</h3>
+        <p>QR-хэндшейк с продавцом («Радар сделки»), биометрия или подтверждение доверенного лица («Защита близких 2.0»).</p>
+        <div class="share"><b>11,6%</b> переводов · 0% участия сотрудников</div>
+      </div>
+      <div class="card corr" style="--c: var(--red); --cb: var(--red-bg)">
+        <span class="tag"><i></i>RED</span>
+        <h3>Стоп во всех каналах</h3>
+        <p>Получатель в базе ЦБ или перевод под диктовку. Пауза 48 ч по 161-ФЗ и лимит 50 000 ₽ во всех банкоматах.</p>
+        <div class="share"><b>2,8%</b> переводов · спецгруппа для клиентов 60+</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="try">
+    <p class="eyebrow">Попробуйте</p>
+    <h2>Проверьте перевод через движок</h2>
+    <p class="lead">Выберите историю или поменяйте параметры. Решение принимает тот же код на Python, что и в репозитории, прямо в вашем браузере.</p>
+    <div class="presets">
+      <button type="button" class="preset" data-preset="nikita"><span class="emoji">🚲</span><b>Никита</b><span>Покупает велосипед, недавно сменил номер</span></button>
+      <button type="button" class="preset" data-preset="granny"><span class="emoji">👵</span><b>Бабушка</b><span>Переводит «на безопасный счёт» под диктовку</span></button>
+      <button type="button" class="preset" data-preset="regular"><span class="emoji">🙂</span><b>Обычный перевод</b><span>5 000 ₽ знакомому получателю</span></button>
+      <button type="button" class="preset" data-preset="takeover"><span class="emoji">🕵️</span><b>Захват аккаунта</b><span>Новое устройство, сменён номер, дроп</span></button>
+    </div>
+    <div class="playground">
+      <form id="tx" class="card form">
+        <details open>
+          <summary>Клиент и перевод</summary>
+          <div class="fields">
+            <label class="field">Возраст<input type="number" name="age" min="14" max="110"></label>
+            <label class="field">Индекс уязвимости, 1–10<input type="number" name="vulnerability_index" min="1" max="10"></label>
+            <label class="field">Типичный перевод, ₽<input type="number" name="typical_limit" min="1000" step="1000"></label>
+            <label class="field">Сумма перевода, ₽<input type="number" name="amount" min="1" step="1000"></label>
+          </div>
+        </details>
+        <details>
+          <summary>Получатель</summary>
+          <div class="fields">
+            <label class="toggle"><input type="checkbox" name="known_recipient">Уже знаком клиенту</label>
+            <label class="toggle"><input type="checkbox" name="in_cbr_db">В базе ЦБ / ФинЦЕРТ</label>
+            <label class="field">Возраст счёта, дней<input type="number" name="account_age_days" min="0"></label>
+            <label class="field">Разных отправителей за 24 ч<input type="number" name="unique_senders_24h" min="0"></label>
+          </div>
+        </details>
+        <details>
+          <summary>Сессия</summary>
+          <div class="fields">
+            <label class="toggle"><input type="checkbox" name="active_call">Идёт телефонный звонок</label>
+            <label class="toggle"><input type="checkbox" name="screen_sharing">Демонстрация экрана</label>
+            <label class="toggle"><input type="checkbox" name="new_device">Новое устройство</label>
+            <label class="toggle"><input type="checkbox" name="phone_changed">Недавно сменил номер</label>
+            <label class="field">Смена номера, часов назад<input type="number" name="phone_changed_hours" min="0"></label>
+            <label class="field">Me2Me за 24 ч, ₽<input type="number" name="me2me_in_24h" min="0" step="10000"></label>
+          </div>
+        </details>
+        <details>
+          <summary>Поведение на экране проверки</summary>
+          <div class="fields">
+            <label class="toggle"><input type="checkbox" name="can_qr_handshake">Продавец рядом, есть QR</label>
+            <label class="toggle"><input type="checkbox" name="biometric_ok">Биометрия пройдена</label>
+            <label class="toggle"><input type="checkbox" name="picks_safe_account">Выбирает «Безопасный счёт»</label>
+            <label class="toggle"><input type="checkbox" name="trusted_contact_confirms">Доверенное лицо подтверждает</label>
+          </div>
+        </details>
+        <button type="submit" class="btn btn-primary submit" disabled>Проверить перевод</button>
+      </form>
+      <div class="card verdict" id="decision" aria-live="polite">
+        <p class="empty">Движок загружается. Решение появится здесь через несколько секунд.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="sim">
+    <p class="eyebrow">Симуляция</p>
+    <h2>«Контекст 360» против жёстких правил</h2>
+    <p class="lead">Синтетический поток переводов с мошенничеством. Подвигайте пороги коридоров и посмотрите, как меняются потери и ложные блоки.</p>
+    <form id="simform" class="card sim">
+      <div class="controls">
+        <label class="range">Порог зелёного <output data-out="green_max"></output>
+          <input type="range" name="green_max" min="10" max="70" value="35"></label>
+        <label class="range">Порог жёлтого <output data-out="yellow_max"></output>
+          <input type="range" name="yellow_max" min="40" max="99" value="70"></label>
+        <label class="range">Доля фрода <output data-out="fraud_share"></output>
+          <input type="range" name="fraud_share" min="0.001" max="0.02" step="0.001" value="0.004"></label>
+        <div class="range">Переводов
+          <div class="seg">
+            <label><input type="radio" name="transfers" value="20000"><span>20k</span></label>
+            <label><input type="radio" name="transfers" value="50000" checked><span>50k</span></label>
+            <label><input type="radio" name="transfers" value="100000"><span>100k</span></label>
+          </div>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary run" disabled>Запустить симуляцию</button>
+      <div class="results" id="simout"></div>
+    </form>
+    <p class="note">⚠️ Данные полностью синтетические, поведение жертв и мошенников задано допущениями в <code>config.Assumptions</code>. Цифры показывают механику, а не прогноз для банка. Цифры на первом экране получены на 300 000 переводов (<code>python run.py</code>).</p>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <p><b>Контекст 360</b> — учебное решение кейса ВТБ на чемпионате Changellenge Cup Moscow 2026.</p>
+      <p>Не является сервисом Банка ВТБ. Данные синтетические, лицензия MIT.</p>
+    </div>
+    <nav>
+      <a href="https://github.com/Nickzps/vtb-context360">Код</a>
       <a href="https://github.com/Nickzps/vtb-context360/blob/main/docs/architecture.md">Архитектура</a>
       <a href="https://github.com/Nickzps/vtb-context360/blob/main/docs/sbp_research.md">Исследование СБП</a>
     </nav>
-    <p class="status" id="status">Загружаю Python в браузер (~10 МБ, только при первом открытии)…</p>
-  </header>
-
-  <section>
-    <h2>Свой перевод через движок</h2>
-    <p class="lead">Выберите сценарий или задайте параметры сами: движок покажет коридор, причины и чем закрыт кейс.</p>
-    <div class="presets">
-      <button type="button" data-preset="nikita">🚲 Никита покупает велосипед</button>
-      <button type="button" data-preset="granny">👵 Бабушка под диктовку</button>
-      <button type="button" data-preset="regular">🙂 Обычный перевод другу</button>
-      <button type="button" data-preset="takeover">🕵️ Захват аккаунта</button>
-    </div>
-    <form id="tx" class="grid">
-      <fieldset>
-        <legend>Клиент и перевод</legend>
-        <label>Возраст <input type="number" name="age" min="14" max="110"></label>
-        <label>Типичный перевод, ₽ <input type="number" name="typical_limit" min="1000" step="1000"></label>
-        <label>Индекс уязвимости (1–10) <input type="number" name="vulnerability_index" min="1" max="10"></label>
-        <label>Сумма перевода, ₽ <input type="number" name="amount" min="1" step="1000"></label>
-      </fieldset>
-      <fieldset>
-        <legend>Получатель и сессия</legend>
-        <label class="check"><input type="checkbox" name="known_recipient"> Получатель уже знаком</label>
-        <label class="check"><input type="checkbox" name="in_cbr_db"> В базе ЦБ / ФинЦЕРТ</label>
-        <label>Возраст счёта получателя, дней <input type="number" name="account_age_days" min="0"></label>
-        <label>Разных отправителей за 24 ч <input type="number" name="unique_senders_24h" min="0"></label>
-        <label class="check"><input type="checkbox" name="active_call"> Идёт телефонный звонок</label>
-        <label class="check"><input type="checkbox" name="screen_sharing"> Демонстрация экрана</label>
-        <label class="check"><input type="checkbox" name="phone_changed"> Недавно сменил номер</label>
-        <label>…сколько часов назад <input type="number" name="phone_changed_hours" min="0"></label>
-        <label>Me2Me за 24 ч, ₽ <input type="number" name="me2me_in_24h" min="0" step="10000"></label>
-        <label class="check"><input type="checkbox" name="new_device"> Новое устройство</label>
-      </fieldset>
-      <fieldset>
-        <legend>Поведение на экране проверки</legend>
-        <label class="check"><input type="checkbox" name="can_qr_handshake"> Продавец рядом, есть QR</label>
-        <label class="check"><input type="checkbox" name="biometric_ok"> Биометрия пройдена</label>
-        <label class="check"><input type="checkbox" name="picks_safe_account"> Выбирает «Безопасный счёт»</label>
-        <label class="check"><input type="checkbox" name="trusted_contact_confirms"> Доверенное лицо подтверждает</label>
-        <div class="actions"><button type="submit" class="primary" disabled>Проверить перевод</button></div>
-      </fieldset>
-    </form>
-    <div id="decision"></div>
-  </section>
-
-  <section>
-    <h2>Симуляция: «Контекст 360» против жёстких правил</h2>
-    <p class="lead">Синтетический поток переводов с мошенничеством. Двигайте пороги коридоров и смотрите, как меняются потери и ложные блоки.</p>
-    <form id="sim">
-      <div class="sliders">
-        <label>Порог зелёного коридора: <b data-out="green_max"></b>
-          <input type="range" name="green_max" min="10" max="70" value="35"></label>
-        <label>Порог жёлтого коридора: <b data-out="yellow_max"></b>
-          <input type="range" name="yellow_max" min="40" max="99" value="70"></label>
-        <label>Доля мошеннических переводов: <b data-out="fraud_share"></b>
-          <input type="range" name="fraud_share" min="0.001" max="0.02" step="0.001" value="0.004"></label>
-        <label>Переводов в симуляции
-          <select name="transfers">
-            <option value="20000">20 000 (быстро)</option>
-            <option value="50000" selected>50 000</option>
-            <option value="100000">100 000 (медленнее)</option>
-          </select></label>
-      </div>
-      <div class="actions"><button type="submit" class="primary" disabled>Запустить симуляцию</button></div>
-    </form>
-    <div id="simout"></div>
-    <p class="note">⚠️ Данные полностью синтетические, поведение жертв и мошенников задано допущениями в <code>config.Assumptions</code>. Цифры показывают механику, а не прогноз для банка. Полный прогон на 300 000 переводов: <code>python run.py</code>.</p>
-  </section>
-</main>
+  </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
 <script>
@@ -194,17 +437,15 @@ const PRESETS = {
 };
 
 const CORRIDOR = {
-  GREEN: { name: "🟢 Зелёный коридор", color: "var(--green)" },
-  YELLOW: { name: "🟡 Жёлтый коридор", color: "var(--yellow)" },
-  RED: { name: "🔴 Красный коридор", color: "var(--red)" },
+  GREEN: { name: "Зелёный коридор", color: "var(--green)" },
+  YELLOW: { name: "Жёлтый коридор", color: "var(--yellow)" },
+  RED: { name: "Красный коридор", color: "var(--red)" },
 };
 
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const rub = (x) => Math.round(x).toLocaleString("ru-RU");
 const pct = (x, d = 1) => (x * 100).toFixed(d).replace(".", ",") + "%";
-
-let py;
 
 function fillForm(p) {
   const f = $("#tx");
@@ -217,7 +458,7 @@ function fillForm(p) {
 function readForm(f) {
   const out = {};
   for (const el of f.elements) {
-    if (!el.name) continue;
+    if (!el.name || (el.type === "radio" && !el.checked)) continue;
     out[el.name] = el.type === "checkbox" ? el.checked : Number(el.value);
   }
   return out;
@@ -226,16 +467,29 @@ function readForm(f) {
 function showDecision(d) {
   const c = CORRIDOR[d.corridor];
   const reasons = d.reasons.length ? d.reasons.map((r) => `<li>${esc(r)}</li>`).join("") : "<li>Признаков риска нет</li>";
-  const verdict = d.passed ? "✅ Деньги ушли получателю" : "⛔ Перевод остановлен";
   const legacy = d.legacy_blocks
-    ? "Жёсткие правила заблокировали бы перевод и отправили клиента звонить в колл-центр."
-    : "Жёсткие правила пропустили бы перевод без проверки.";
+    ? "Жёсткие правила заблокировали бы этот перевод и отправили клиента звонить в колл-центр."
+    : "Жёсткие правила пропустили бы этот перевод без проверки.";
   $("#decision").innerHTML = `
-    <div class="result" data-c="${d.corridor}">
-      <div class="badge">${c.name} · score ${d.score}</div>
-      <ul>${reasons}</ul>
-      <div><b>${verdict}.</b> ${esc(d.resolved_by)}${d.manual_review ? " · нужен ручной разбор" : ""}</div>
-      <p class="compare">Для сравнения: ${legacy}</p>
+    <div class="signal" data-c="${d.corridor}">
+      <div class="lamp"><i></i><i></i><i></i></div>
+      <div><h3 style="color:${c.color}">${c.name}</h3><div class="score">Риск-score ${d.score} из 100</div></div>
+    </div>
+    <div class="meter"><i style="left:${Math.min(d.score, 100)}%"></i></div>
+    <ul class="reasons">${reasons}</ul>
+    <div class="outcome" data-ok="${d.passed}">
+      ${d.passed ? "✓ Деньги ушли получателю" : "⛔ Перевод остановлен"}
+      <small>${esc(d.resolved_by)}${d.manual_review ? " · ручной разбор" : ""}</small>
+    </div>
+    <p class="legacy">${legacy}</p>`;
+}
+
+function compare(title, a, b, fmt) {
+  const max = Math.max(a, b, 1e-9);
+  return `<p class="cmp-title">${title}</p>
+    <div class="cmp">
+      <span class="label">Жёсткие правила</span><div class="track"><div class="fill old" style="width:${(a / max) * 100}%">${fmt(a)}</div></div>
+      <span class="label">Контекст 360</span><div class="track"><div class="fill new" style="width:${(b / max) * 100}%">${fmt(b)}</div></div>
     </div>`;
 }
 
@@ -252,25 +506,42 @@ function showSimulation(r) {
     const win = better === "max" ? b > a : b < a;
     return `<tr><td>${name}</td><td>${fmt(a)}</td><td class="${win ? "win" : ""}">${fmt(b)}</td></tr>`;
   }).join("");
-  const seg = (k) => `<div style="width:${r.corridors[k] * 100}%;background:${CORRIDOR[k].color}" title="${CORRIDOR[k].name}">${r.corridors[k] > 0.06 ? pct(r.corridors[k]) : ""}</div>`;
+  const seg = (k) => `<div style="width:${r.corridors[k] * 100}%;background:${CORRIDOR[k].color}">${r.corridors[k] > 0.07 ? pct(r.corridors[k]) : ""}</div>`;
   const resolved = r.resolved.map(([how, n]) => `<tr><td>${esc(how)}</td><td>${rub(n)}</td></tr>`).join("");
-  $("#simout").innerHTML = `
+  const sign = (x) => (x >= 0 ? "−" : "+") + pct(Math.abs(x), 0);
+  const out = $("#simout");
+  out.innerHTML = `
     <div class="kpis">
-      <div class="kpi"><b>−${pct(r.loss_reduction, 0)}</b><span>потерь клиентов</span></div>
-      <div class="kpi"><b>−${pct(r.fp_reduction, 0)}</b><span>ручных разборов честных переводов</span></div>
-      <div class="kpi"><b>${rub(N.fraud_cnt)}</b><span>мошеннических из ${rub(r.n_transfers)} переводов</span></div>
+      <div class="kpi"><b class="good">${sign(r.loss_reduction)}</b><span>потерь клиентов</span></div>
+      <div class="kpi"><b class="good">${sign(r.fp_reduction)}</b><span>ложных блоков с разбором</span></div>
+      <div class="kpi"><b>${pct(N.recall)}</b><span>фрода выявлено (было ${pct(L.recall)})</span></div>
+      <div class="kpi"><b>${rub(N.fraud_cnt)}</b><span>мошеннических из ${rub(r.n_transfers)}</span></div>
     </div>
-    <div class="legend">Распределение по коридорам</div>
-    <div class="bar">${seg("GREEN")}${seg("YELLOW")}${seg("RED")}</div>
-    <div class="legend">🟢 ${pct(r.corridors.GREEN)} · 🟡 ${pct(r.corridors.YELLOW)} · 🔴 ${pct(r.corridors.RED)}</div>
-    <div class="table-wrap"><table style="margin-top:16px">
+    <div class="charts">
+      <div class="chart">
+        <h4>Сравнение со старой схемой</h4>
+        ${compare("Потери клиентов, млн ₽", L.loss / 1e6, N.loss / 1e6, (x) => x.toFixed(1).replace(".", ","))}
+        ${compare("Ложные блоки с ручным разбором", L.fp_manual, N.fp_manual, rub)}
+      </div>
+      <div class="chart">
+        <h4>Распределение по коридорам</h4>
+        <div class="bar">${seg("GREEN")}${seg("YELLOW")}${seg("RED")}</div>
+        <div class="legend">
+          <span><i style="background:var(--green)"></i>Зелёный ${pct(r.corridors.GREEN)}</span>
+          <span><i style="background:var(--yellow)"></i>Жёлтый ${pct(r.corridors.YELLOW)}</span>
+          <span><i style="background:var(--red)"></i>Красный ${pct(r.corridors.RED)}</span>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Как закрыты жёлтые и красные</th><th>Кейсов</th></tr></thead>
+          <tbody>${resolved}</tbody>
+        </table></div>
+      </div>
+    </div>
+    <div class="table-wrap" style="margin-top:28px"><table>
       <thead><tr><th>Метрика</th><th>Жёсткие правила</th><th>Контекст 360</th></tr></thead>
       <tbody>${rows}</tbody>
-    </table></div>
-    <div class="table-wrap"><table style="margin-top:16px">
-      <thead><tr><th>Как закрыты жёлтые и красные кейсы</th><th>Кейсов</th></tr></thead>
-      <tbody>${resolved}</tbody>
     </table></div>`;
+  out.classList.remove("show"); void out.offsetWidth; out.classList.add("show");
 }
 
 // Отрисовать «Считаю…» до того, как Python займёт поток
@@ -278,14 +549,14 @@ const nextFrame = () => new Promise((r) => requestAnimationFrame(() => setTimeou
 
 async function boot() {
   fillForm(PRESETS.nikita);
-  const sim = $("#sim");
+  const sim = $("#simform");
   for (const el of sim.querySelectorAll("input[type=range]")) {
     const out = sim.querySelector(`[data-out=${el.name}]`);
     const upd = () => (out.textContent = el.name === "fraud_share" ? pct(Number(el.value)) : el.value);
     el.addEventListener("input", upd); upd();
   }
 
-  py = await loadPyodide();
+  const py = await loadPyodide();
   py.FS.mkdir("context360");
   const files = await Promise.all([
     ...MODULES.map((m) => fetch(`context360/${m}.py`).then((r) => r.text())),
@@ -296,13 +567,20 @@ async function boot() {
   py.runPython("import demo");
   const demo = py.pyimport("demo");
 
-  $("#status").textContent = "Python загружен, движок готов.";
-  document.querySelectorAll("button.primary").forEach((b) => (b.disabled = false));
+  $("#dot").className = "dot ok";
+  $("#status").textContent = "Движок загружен и работает прямо в браузере";
+  document.querySelectorAll("button[disabled]").forEach((b) => (b.disabled = false));
 
+  const presetButtons = document.querySelectorAll("[data-preset]");
   const check = () => showDecision(JSON.parse(demo.decide(JSON.stringify(readForm($("#tx"))))));
   $("#tx").addEventListener("submit", (e) => { e.preventDefault(); check(); });
-  document.querySelectorAll("[data-preset]").forEach((b) =>
-    b.addEventListener("click", () => { fillForm(PRESETS[b.dataset.preset]); check(); }));
+  $("#tx").addEventListener("input", () => presetButtons.forEach((b) => b.setAttribute("aria-pressed", "false")));
+  presetButtons.forEach((b) => b.addEventListener("click", () => {
+    fillForm(PRESETS[b.dataset.preset]);
+    presetButtons.forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    check();
+  }));
+  presetButtons[0].setAttribute("aria-pressed", "true");
   check();
 
   sim.addEventListener("submit", async (e) => {
@@ -314,15 +592,19 @@ async function boot() {
       const t0 = performance.now();
       const r = JSON.parse(demo.run_simulation(JSON.stringify({ ...readForm(sim), seed: 42 })));
       showSimulation(r);
-      $("#status").textContent = `Симуляция заняла ${((performance.now() - t0) / 1000).toFixed(1)} с.`;
+      btn.textContent = `Готово за ${((performance.now() - t0) / 1000).toFixed(1).replace(".", ",")} с · запустить ещё раз`;
+    } catch (err) {
+      btn.textContent = "Ошибка, попробовать ещё раз";
+      console.error(err);
     } finally {
-      btn.disabled = false; btn.textContent = "Запустить симуляцию";
+      btn.disabled = false;
     }
   });
 }
 
 boot().catch((err) => {
-  $("#status").textContent = "Не удалось загрузить Python: " + err.message;
+  $("#dot").className = "dot err";
+  $("#status").textContent = "Не удалось загрузить движок: " + err.message + ". Обновите страницу.";
   console.error(err);
 });
 </script>
