@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ВТБ Контекст 360</title>
+<meta name="description" content="Прототип кросс-канального антифрод-движка «Светофор» для СБП, ДБО и банкоматов. Движок на Python работает прямо в браузере.">
+<style>
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --text: #14171f; --muted: #5d6475; --border: #dfe3ea;
+  --accent: #0a3ca8; --accent-text: #ffffff;
+  --green: #138a4b; --green-bg: #e3f5ea; --yellow: #9a6a00; --yellow-bg: #fff3d1;
+  --red: #c0262d; --red-bg: #fde4e4;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1218; --surface: #181c24; --text: #e8eaf0; --muted: #9aa2b4; --border: #2b313d;
+    --accent: #6c9bff; --accent-text: #0b1020;
+    --green: #4fd18a; --green-bg: #133222; --yellow: #f2c14e; --yellow-bg: #3a2e0f;
+    --red: #ff7b7f; --red-bg: #3d1719;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; }
+header h1 { font-size: 32px; line-height: 1.2; margin: 0 0 8px; }
+header p { color: var(--muted); margin: 0 0 12px; max-width: 720px; }
+header nav a { margin-right: 16px; }
+a { color: var(--accent); }
+section {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 24px; margin-top: 24px;
+}
+h2 { font-size: 22px; margin: 0 0 4px; }
+.lead { color: var(--muted); margin: 0 0 20px; }
+.status { font-size: 14px; color: var(--muted); margin-top: 16px; }
+.presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+button {
+  font: inherit; cursor: pointer; border-radius: 8px; padding: 8px 14px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+}
+button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+button:disabled { opacity: .5; cursor: wait; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+legend { font-weight: 600; margin-bottom: 8px; padding: 0; }
+label { display: block; font-size: 14px; margin-bottom: 10px; color: var(--muted); }
+label.check { display: flex; align-items: center; gap: 8px; color: var(--text); }
+input[type=number], select {
+  display: block; width: 100%; margin-top: 4px; font: inherit; color: var(--text);
+  background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px;
+}
+input[type=range] { width: 100%; }
+.actions { margin-top: 12px; }
+.result { margin-top: 20px; border-radius: 10px; padding: 16px 20px; border: 1px solid var(--border); }
+.result[data-c=GREEN] { background: var(--green-bg); border-color: var(--green); }
+.result[data-c=YELLOW] { background: var(--yellow-bg); border-color: var(--yellow); }
+.result[data-c=RED] { background: var(--red-bg); border-color: var(--red); }
+.badge { font-weight: 700; font-size: 20px; }
+.result[data-c=GREEN] .badge { color: var(--green); }
+.result[data-c=YELLOW] .badge { color: var(--yellow); }
+.result[data-c=RED] .badge { color: var(--red); }
+.result ul { margin: 8px 0; padding-left: 20px; }
+.compare { font-size: 14px; color: var(--muted); }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+th:first-child, td:first-child { text-align: left; }
+td.win { font-weight: 700; }
+.bar { display: flex; height: 28px; border-radius: 6px; overflow: hidden; margin: 8px 0 4px; }
+.bar div { display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #fff; min-width: 0; white-space: nowrap; }
+.legend { font-size: 14px; color: var(--muted); }
+.sliders { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 24px; }
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+.kpi { background: var(--bg); border-radius: 8px; padding: 12px 14px; }
+.kpi b { display: block; font-size: 24px; }
+.kpi span { font-size: 13px; color: var(--muted); }
+.note { font-size: 13px; color: var(--muted); margin-top: 16px; }
+.table-wrap { overflow-x: auto; }
+@media (max-width: 760px) {
+  .grid, .sliders, .kpis { grid-template-columns: 1fr; }
+  header h1 { font-size: 26px; }
+  section { padding: 18px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>ВТБ Контекст 360</h1>
+    <p>Прототип кросс-канального антифрод-движка «Светофор» для цепочки СБП → ДБО → банкомат. Код движка на Python работает прямо в этой вкладке, сервер не нужен.</p>
+    <nav>
+      <a href="https://github.com/Nickzps/vtb-context360">Код на GitHub</a>
+      <a href="https://github.com/Nickzps/vtb-context360/blob/main/docs/architecture.md">Архитектура</a>
+      <a href="https://github.com/Nickzps/vtb-context360/blob/main/docs/sbp_research.md">Исследование СБП</a>
+    </nav>
+    <p class="status" id="status">Загружаю Python в браузер (~10 МБ, только при первом открытии)…</p>
+  </header>
+
+  <section>
+    <h2>Свой перевод через движок</h2>
+    <p class="lead">Выберите сценарий или задайте параметры сами: движок покажет коридор, причины и чем закрыт кейс.</p>
+    <div class="presets">
+      <button type="button" data-preset="nikita">🚲 Никита покупает велосипед</button>
+      <button type="button" data-preset="granny">👵 Бабушка под диктовку</button>
+      <button type="button" data-preset="regular">🙂 Обычный перевод другу</button>
+      <button type="button" data-preset="takeover">🕵️ Захват аккаунта</button>
+    </div>
+    <form id="tx" class="grid">
+      <fieldset>
+        <legend>Клиент и перевод</legend>
+        <label>Возраст <input type="number" name="age" min="14" max="110"></label>
+        <label>Типичный перевод, ₽ <input type="number" name="typical_limit" min="1000" step="1000"></label>
+        <label>Индекс уязвимости (1–10) <input type="number" name="vulnerability_index" min="1" max="10"></label>
+        <label>Сумма перевода, ₽ <input type="number" name="amount" min="1" step="1000"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Получатель и сессия</legend>
+        <label class="check"><input type="checkbox" name="known_recipient"> Получатель уже знаком</label>
+        <label class="check"><input type="checkbox" name="in_cbr_db"> В базе ЦБ / ФинЦЕРТ</label>
+        <label>Возраст счёта получателя, дней <input type="number" name="account_age_days" min="0"></label>
+        <label>Разных отправителей за 24 ч <input type="number" name="unique_senders_24h" min="0"></label>
+        <label class="check"><input type="checkbox" name="active_call"> Идёт телефонный звонок</label>
+        <label class="check"><input type="checkbox" name="screen_sharing"> Демонстрация экрана</label>
+        <label class="check"><input type="checkbox" name="phone_changed"> Недавно сменил номер</label>
+        <label>…сколько часов назад <input type="number" name="phone_changed_hours" min="0"></label>
+        <label>Me2Me за 24 ч, ₽ <input type="number" name="me2me_in_24h" min="0" step="10000"></label>
+        <label class="check"><input type="checkbox" name="new_device"> Новое устройство</label>
+      </fieldset>
+      <fieldset>
+        <legend>Поведение на экране проверки</legend>
+        <label class="check"><input type="checkbox" name="can_qr_handshake"> Продавец рядом, есть QR</label>
+        <label class="check"><input type="checkbox" name="biometric_ok"> Биометрия пройдена</label>
+        <label class="check"><input type="checkbox" name="picks_safe_account"> Выбирает «Безопасный счёт»</label>
+        <label class="check"><input type="checkbox" name="trusted_contact_confirms"> Доверенное лицо подтверждает</label>
+        <div class="actions"><button type="submit" class="primary" disabled>Проверить перевод</button></div>
+      </fieldset>
+    </form>
+    <div id="decision"></div>
+  </section>
+
+  <section>
+    <h2>Симуляция: «Контекст 360» против жёстких правил</h2>
+    <p class="lead">Синтетический поток переводов с мошенничеством. Двигайте пороги коридоров и смотрите, как меняются потери и ложные блоки.</p>
+    <form id="sim">
+      <div class="sliders">
+        <label>Порог зелёного коридора: <b data-out="green_max"></b>
+          <input type="range" name="green_max" min="10" max="70" value="35"></label>
+        <label>Порог жёлтого коридора: <b data-out="yellow_max"></b>
+          <input type="range" name="yellow_max" min="40" max="99" value="70"></label>
+        <label>Доля мошеннических переводов: <b data-out="fraud_share"></b>
+          <input type="range" name="fraud_share" min="0.001" max="0.02" step="0.001" value="0.004"></label>
+        <label>Переводов в симуляции
+          <select name="transfers">
+            <option value="20000">20 000 (быстро)</option>
+            <option value="50000" selected>50 000</option>
+            <option value="100000">100 000 (медленнее)</option>
+          </select></label>
+      </div>
+      <div class="actions"><button type="submit" class="primary" disabled>Запустить симуляцию</button></div>
+    </form>
+    <div id="simout"></div>
+    <p class="note">⚠️ Данные полностью синтетические, поведение жертв и мошенников задано допущениями в <code>config.Assumptions</code>. Цифры показывают механику, а не прогноз для банка. Полный прогон на 300 000 переводов: <code>python run.py</code>.</p>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script>
+const MODULES = ["__init__", "config", "models", "engine", "simulation", "report"];
+
+const PRESETS = {
+  nikita: { age: 24, typical_limit: 30000, vulnerability_index: 2, amount: 85000,
+    known_recipient: false, in_cbr_db: false, account_age_days: 900, unique_senders_24h: 1,
+    active_call: false, screen_sharing: false, phone_changed: true, phone_changed_hours: 20,
+    me2me_in_24h: 0, new_device: false,
+    can_qr_handshake: true, biometric_ok: true, picks_safe_account: false, trusted_contact_confirms: false },
+  granny: { age: 74, typical_limit: 20000, vulnerability_index: 8, amount: 450000,
+    known_recipient: false, in_cbr_db: false, account_age_days: 12, unique_senders_24h: 9,
+    active_call: true, screen_sharing: false, phone_changed: false, phone_changed_hours: 0,
+    me2me_in_24h: 450000, new_device: false,
+    can_qr_handshake: false, biometric_ok: true, picks_safe_account: true, trusted_contact_confirms: false },
+  regular: { age: 35, typical_limit: 25000, vulnerability_index: 3, amount: 5000,
+    known_recipient: true, in_cbr_db: false, account_age_days: 2000, unique_senders_24h: 1,
+    active_call: false, screen_sharing: false, phone_changed: false, phone_changed_hours: 0,
+    me2me_in_24h: 0, new_device: false,
+    can_qr_handshake: false, biometric_ok: true, picks_safe_account: false, trusted_contact_confirms: false },
+  takeover: { age: 41, typical_limit: 40000, vulnerability_index: 3, amount: 180000,
+    known_recipient: false, in_cbr_db: false, account_age_days: 7, unique_senders_24h: 14,
+    active_call: false, screen_sharing: false, phone_changed: true, phone_changed_hours: 3,
+    me2me_in_24h: 0, new_device: true,
+    can_qr_handshake: false, biometric_ok: false, picks_safe_account: false, trusted_contact_confirms: false },
+};
+
+const CORRIDOR = {
+  GREEN: { name: "🟢 Зелёный коридор", color: "var(--green)" },
+  YELLOW: { name: "🟡 Жёлтый коридор", color: "var(--yellow)" },
+  RED: { name: "🔴 Красный коридор", color: "var(--red)" },
+};
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const rub = (x) => Math.round(x).toLocaleString("ru-RU");
+const pct = (x, d = 1) => (x * 100).toFixed(d).replace(".", ",") + "%";
+
+let py;
+
+function fillForm(p) {
+  const f = $("#tx");
+  for (const [k, v] of Object.entries(p)) {
+    const el = f.elements[k];
+    if (el.type === "checkbox") el.checked = v; else el.value = v;
+  }
+}
+
+function readForm(f) {
+  const out = {};
+  for (const el of f.elements) {
+    if (!el.name) continue;
+    out[el.name] = el.type === "checkbox" ? el.checked : Number(el.value);
+  }
+  return out;
+}
+
+function showDecision(d) {
+  const c = CORRIDOR[d.corridor];
+  const reasons = d.reasons.length ? d.reasons.map((r) => `<li>${esc(r)}</li>`).join("") : "<li>Признаков риска нет</li>";
+  const verdict = d.passed ? "✅ Деньги ушли получателю" : "⛔ Перевод остановлен";
+  const legacy = d.legacy_blocks
+    ? "Жёсткие правила заблокировали бы перевод и отправили клиента звонить в колл-центр."
+    : "Жёсткие правила пропустили бы перевод без проверки.";
+  $("#decision").innerHTML = `
+    <div class="result" data-c="${d.corridor}">
+      <div class="badge">${c.name} · score ${d.score}</div>
+      <ul>${reasons}</ul>
+      <div><b>${verdict}.</b> ${esc(d.resolved_by)}${d.manual_review ? " · нужен ручной разбор" : ""}</div>
+      <p class="compare">Для сравнения: ${legacy}</p>
+    </div>`;
+}
+
+function showSimulation(r) {
+  const L = r.legacy, N = r.context360;
+  const rows = [
+    ["Полнота выявления фрода", (m) => m.recall, (x) => pct(x), "max"],
+    ["Потери клиентов, млн ₽", (m) => m.loss / 1e6, (x) => x.toFixed(1).replace(".", ","), "min"],
+    ["Доля спасённых средств", (m) => m.saved_share, (x) => pct(x), "max"],
+    ["Ложные блоки с ручным разбором", (m) => m.fp_manual, rub, "min"],
+    ["Честные, прошедшие проверку сами", (m) => m.legit_selfservice, rub, "max"],
+  ].map(([name, get, fmt, better]) => {
+    const a = get(L), b = get(N);
+    const win = better === "max" ? b > a : b < a;
+    return `<tr><td>${name}</td><td>${fmt(a)}</td><td class="${win ? "win" : ""}">${fmt(b)}</td></tr>`;
+  }).join("");
+  const seg = (k) => `<div style="width:${r.corridors[k] * 100}%;background:${CORRIDOR[k].color}" title="${CORRIDOR[k].name}">${r.corridors[k] > 0.06 ? pct(r.corridors[k]) : ""}</div>`;
+  const resolved = r.resolved.map(([how, n]) => `<tr><td>${esc(how)}</td><td>${rub(n)}</td></tr>`).join("");
+  $("#simout").innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><b>−${pct(r.loss_reduction, 0)}</b><span>потерь клиентов</span></div>
+      <div class="kpi"><b>−${pct(r.fp_reduction, 0)}</b><span>ручных разборов честных переводов</span></div>
+      <div class="kpi"><b>${rub(N.fraud_cnt)}</b><span>мошеннических из ${rub(r.n_transfers)} переводов</span></div>
+    </div>
+    <div class="legend">Распределение по коридорам</div>
+    <div class="bar">${seg("GREEN")}${seg("YELLOW")}${seg("RED")}</div>
+    <div class="legend">🟢 ${pct(r.corridors.GREEN)} · 🟡 ${pct(r.corridors.YELLOW)} · 🔴 ${pct(r.corridors.RED)}</div>
+    <div class="table-wrap"><table style="margin-top:16px">
+      <thead><tr><th>Метрика</th><th>Жёсткие правила</th><th>Контекст 360</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <div class="table-wrap"><table style="margin-top:16px">
+      <thead><tr><th>Как закрыты жёлтые и красные кейсы</th><th>Кейсов</th></tr></thead>
+      <tbody>${resolved}</tbody>
+    </table></div>`;
+}
+
+// Отрисовать «Считаю…» до того, как Python займёт поток
+const nextFrame = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
+
+async function boot() {
+  fillForm(PRESETS.nikita);
+  const sim = $("#sim");
+  for (const el of sim.querySelectorAll("input[type=range]")) {
+    const out = sim.querySelector(`[data-out=${el.name}]`);
+    const upd = () => (out.textContent = el.name === "fraud_share" ? pct(Number(el.value)) : el.value);
+    el.addEventListener("input", upd); upd();
+  }
+
+  py = await loadPyodide();
+  py.FS.mkdir("context360");
+  const files = await Promise.all([
+    ...MODULES.map((m) => fetch(`context360/${m}.py`).then((r) => r.text())),
+    fetch("demo.py").then((r) => r.text()),
+  ]);
+  MODULES.forEach((m, i) => py.FS.writeFile(`context360/${m}.py`, files[i]));
+  py.FS.writeFile("demo.py", files[MODULES.length]);
+  py.runPython("import demo");
+  const demo = py.pyimport("demo");
+
+  $("#status").textContent = "Python загружен, движок готов.";
+  document.querySelectorAll("button.primary").forEach((b) => (b.disabled = false));
+
+  const check = () => showDecision(JSON.parse(demo.decide(JSON.stringify(readForm($("#tx"))))));
+  $("#tx").addEventListener("submit", (e) => { e.preventDefault(); check(); });
+  document.querySelectorAll("[data-preset]").forEach((b) =>
+    b.addEventListener("click", () => { fillForm(PRESETS[b.dataset.preset]); check(); }));
+  check();
+
+  sim.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = sim.querySelector("button");
+    btn.disabled = true; btn.textContent = "Считаю…";
+    await nextFrame();
+    try {
+      const t0 = performance.now();
+      const r = JSON.parse(demo.run_simulation(JSON.stringify({ ...readForm(sim), seed: 42 })));
+      showSimulation(r);
+      $("#status").textContent = `Симуляция заняла ${((performance.now() - t0) / 1000).toFixed(1)} с.`;
+    } finally {
+      btn.disabled = false; btn.textContent = "Запустить симуляцию";
+    }
+  });
+}
+
+boot().catch((err) => {
+  $("#status").textContent = "Не удалось загрузить Python: " + err.message;
+  console.error(err);
+});
+</script>
+</body>
+</html>
